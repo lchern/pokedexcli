@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
-	"bufio"
 )
 
 func main() {
@@ -17,8 +17,24 @@ func main() {
 		if len(words) == 0 {
 			continue
 		}
-		
+
 		firstWord := words[0]
-		fmt.Println("Your command was:", firstWord)
+		isCommandFound := false
+
+		for _, command := range getCommands() {
+			if firstWord == command.name {
+				isCommandFound = true
+				err := command.callback()
+				if err != nil {
+					fmt.Println("Error executing command:", err)
+				}
+				break
+			}
+
+		}
+
+		if !isCommandFound {
+			fmt.Println("Unknown command")
+		}
 	}
-}	
+}
