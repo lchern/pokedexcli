@@ -9,7 +9,15 @@ import (
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(*config) error
+}
+
+type config struct {
+	commands map[string]cliCommand
+}
+
+var cfg = &config{
+	commands: getCommands(),
 }
 
 func getCommands() map[string]cliCommand {
@@ -38,15 +46,15 @@ func cleanInput(text string) []string {
 	return result
 }
 
-func commandExit() error {
+func commandExit(cfg *config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp() error {
+func commandHelp(cfg *config) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
-	for _, command := range getCommands() {
+	for _, command := range cfg.commands {
 		fmt.Printf("%s: %s\n", command.name, command.description)
 	}
 	return nil

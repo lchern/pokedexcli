@@ -21,10 +21,10 @@ func main() {
 		firstWord := words[0]
 		isCommandFound := false
 
-		for _, command := range getCommands() {
+		for _, command := range cfg.commands {
 			if firstWord == command.name {
 				isCommandFound = true
-				err := command.callback()
+				err := command.callback(cfg)
 				if err != nil {
 					fmt.Println("Error executing command:", err)
 				}
