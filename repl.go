@@ -4,20 +4,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"pokedexcli/internal/pokeapi"
 )
 
 type cliCommand struct {
 	name        string
 	description string
 	callback    func(*config) error
-}
-
-type config struct {
-	commands map[string]cliCommand
-}
-
-var cfg = &config{
-	commands: getCommands(),
 }
 
 func getCommands() map[string]cliCommand {
@@ -31,6 +24,16 @@ func getCommands() map[string]cliCommand {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
+		},
+		"map": {
+			name: 		 "map",
+			description: "Displays the names of the next 20 location areas in the Pokemon world",
+			callback: 	 commandMap,
+		},
+		"mapb": {
+			name: 		 "mapb",
+			description: "Displays the names of the previous 20 location areas in the Pokemon world",
+			callback: 	 commandMapb,
 		},
 	}
 }
@@ -56,6 +59,41 @@ func commandHelp(cfg *config) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
 	for _, command := range cfg.commands {
 		fmt.Printf("%s: %s\n", command.name, command.description)
+	}
+	return nil
+}
+
+func commandMap(cfg *config) error {
+	areas, err := pokeapi.ListLocAreas(cfg.nextURL)
+	if err != nil {
+		return fmt.Errorf("failed to fetch location areas: %w", err)
+	}
+	
+	cfg.nextURL = *areas.Next
+	cfg.prevURL = areas.Previous
+	
+	for _, area := range areas.Results {
+		fmt.Println(area.Name)	
+	}
+	return nil
+}
+
+func commandMapb(cfg *config) error {
+	if cfg.prevURL == nil {
+		fmt.Println("you're on the first page")
+	} else {
+		areas, err := pokeapi.ListLocAreas(*cfg.prevURL)
+	
+		if err != nil {
+			return fmt.Errorf("failed to fetch location areas: %w", err)
+		}
+		
+		cfg.nextURL = *areas.Next
+		cfg.prevURL = areas.Previous
+		
+		for _, area := range areas.Results {
+			fmt.Println(area.Name)	
+		}
 	}
 	return nil
 }

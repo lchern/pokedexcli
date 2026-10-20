@@ -6,8 +6,21 @@ import (
 	"os"
 )
 
+type config struct {
+	commands map[string]cliCommand
+	nextURL  string
+	prevURL  *string
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+
+	var cfg = &config{
+		commands: getCommands(),
+		nextURL:  "https://pokeapi.co/api/v2/location-area/",
+		prevURL:  nil,
+	}	
+
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
