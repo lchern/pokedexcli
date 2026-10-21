@@ -6,9 +6,11 @@ import (
 	"os"
 )
 
+var startPage = "https://pokeapi.co/api/v2/location-area/?offset=0&limit=20"
+
 type config struct {
 	commands map[string]cliCommand
-	nextURL  string
+	nextURL  *string
 	prevURL  *string
 }
 
@@ -17,7 +19,7 @@ func main() {
 
 	var cfg = &config{
 		commands: getCommands(),
-		nextURL:  "https://pokeapi.co/api/v2/location-area/",
+		nextURL:  &startPage,
 		prevURL:  nil,
 	}	
 

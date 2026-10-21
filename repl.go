@@ -5,7 +5,11 @@ import (
 	"os"
 	"strings"
 	"pokedexcli/internal/pokeapi"
+	"pokedexcli/internal/pokecache"
+	"time"
 )
+
+var cache = pokecache.NewCache(10 * time.Second)
 
 type cliCommand struct {
 	name        string
@@ -64,16 +68,21 @@ func commandHelp(cfg *config) error {
 }
 
 func commandMap(cfg *config) error {
-	areas, err := pokeapi.ListLocAreas(cfg.nextURL)
-	if err != nil {
-		return fmt.Errorf("failed to fetch location areas: %w", err)
-	}
-	
-	cfg.nextURL = *areas.Next
-	cfg.prevURL = areas.Previous
-	
-	for _, area := range areas.Results {
-		fmt.Println(area.Name)	
+	if cfg.nextURL == nil {
+		fmt.Println("you're on the last page")
+	} else {
+		areas, err := pokeapi.ListLocAreas(cache, *cfg.nextURL)
+
+		if err != nil {
+			return fmt.Errorf("failed to fetch location areas: %w", err)
+		}
+		
+		cfg.nextURL = areas.Next
+		cfg.prevURL = areas.Previous
+			
+		for _, area := range areas.Results {
+			fmt.Println(area.Name)	
+		}
 	}
 	return nil
 }
@@ -82,13 +91,13 @@ func commandMapb(cfg *config) error {
 	if cfg.prevURL == nil {
 		fmt.Println("you're on the first page")
 	} else {
-		areas, err := pokeapi.ListLocAreas(*cfg.prevURL)
+		areas, err := pokeapi.ListLocAreas(cache, *cfg.prevURL)
 	
 		if err != nil {
 			return fmt.Errorf("failed to fetch location areas: %w", err)
 		}
 		
-		cfg.nextURL = *areas.Next
+		cfg.nextURL = areas.Next
 		cfg.prevURL = areas.Previous
 		
 		for _, area := range areas.Results {
