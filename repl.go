@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var cache = pokecache.NewCache(10 * time.Second)
+var cache = pokecache.NewCache(5 * time.Minute)
 
 type cliCommand struct {
 	name        string

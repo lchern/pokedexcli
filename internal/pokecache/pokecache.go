@@ -47,7 +47,7 @@ func (c *Cache) Get(key string) ([]byte, bool) {
 }
 
 func (c *Cache) reapLoop(interval time.Duration) {
-	ticker := time.NewTicker(interval)
+	ticker := time.NewTicker(interval/20) // Check for expired items every 1/20th of the interval
 	defer ticker.Stop()
 
 	for range ticker.C {
