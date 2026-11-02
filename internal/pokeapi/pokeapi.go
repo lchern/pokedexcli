@@ -16,6 +16,14 @@ type LocArea struct {
 	} `json:"results"`
 }
 
+type PokemonInArea struct {
+	Results []struct {
+		Pokemon struct {
+			Name string `json:"name"`
+		} `json:"pokemon"`
+	} `json:"pokemon_encounters"`
+}
+
 
 func ListLocAreas(cache *pokecache.Cache, pageURL string) (LocArea, error) {
 	value, exists := cache.Get(pageURL)
@@ -59,4 +67,49 @@ func UnmarshalLocAreas(data []byte) (LocArea, error) {
 		return LocArea{}, fmt.Errorf("failed to unmarshal response body: %w", err)
 	}
 	return areas, nil
+}
+
+func ListPokemonInArea(cache *pokecache.Cache, areaName string) (PokemonInArea, error) {
+	areaURL := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s/", areaName)
+	
+	value, exists := cache.Get(areaURL)
+	if exists {
+		// The line below is just for debugging purposes
+		fmt.Println("Using cached data for", areaURL)
+		
+	} else {
+		// The line below is just for debugging purposes
+		fmt.Println("Fetching fresh data for", areaURL)
+		
+		res, err := http.Get(areaURL)
+		if err != nil {
+			return PokemonInArea{}, fmt.Errorf("failed to fetch Pokemon in area %s: %w", areaName, err)
+		}
+		defer res.Body.Close()
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return PokemonInArea{}, fmt.Errorf("failed to read response body: %w", err)
+		}
+		if res.StatusCode > 299 {
+			return PokemonInArea{}, fmt.Errorf("Response failed with status code: %d and\nbody: %s\n", res.StatusCode, body)
+		}
+
+		value = body
+		cache.Add(areaURL, body)
+	}
+
+	pokemon, err := UnmarshalPokemonInArea(value)
+	if err != nil {
+		return PokemonInArea{}, fmt.Errorf("failed to unmarshal Pokemon in area %s: %w", areaName, err)
+	}
+	return pokemon, nil
+}
+
+func UnmarshalPokemonInArea(data []byte) (PokemonInArea, error) {
+	var pokemon PokemonInArea
+	if err := json.Unmarshal(data, &pokemon); err != nil {
+		return PokemonInArea{}, fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+	return pokemon, nil
 }

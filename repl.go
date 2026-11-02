@@ -14,7 +14,7 @@ var cache = pokecache.NewCache(5 * time.Minute)
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, []string) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -39,6 +39,11 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the names of the previous 20 location areas in the Pokemon world",
 			callback: 	 commandMapb,
 		},
+		"explore": {
+			name: 		 "explore",
+			description: "Displays the names of all Pokemon found in that area",
+			callback: 	 commandExplore,
+		},
 	}
 }
 
@@ -53,13 +58,13 @@ func cleanInput(text string) []string {
 	return result
 }
 
-func commandExit(cfg *config) error {
+func commandExit(cfg *config, args []string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cfg *config) error {
+func commandHelp(cfg *config, args []string) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
 	for _, command := range cfg.commands {
 		fmt.Printf("%s: %s\n", command.name, command.description)
@@ -67,7 +72,7 @@ func commandHelp(cfg *config) error {
 	return nil
 }
 
-func commandMap(cfg *config) error {
+func commandMap(cfg *config, args []string) error {
 	if cfg.nextURL == nil {
 		fmt.Println("you're on the last page")
 	} else {
@@ -87,7 +92,7 @@ func commandMap(cfg *config) error {
 	return nil
 }
 
-func commandMapb(cfg *config) error {
+func commandMapb(cfg *config, args []string) error {
 	if cfg.prevURL == nil {
 		fmt.Println("you're on the first page")
 	} else {
@@ -103,6 +108,24 @@ func commandMapb(cfg *config) error {
 		for _, area := range areas.Results {
 			fmt.Println(area.Name)	
 		}
+	}
+	return nil
+}
+
+func commandExplore(cfg *config, args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("please provide a location area name")
+	}
+
+	areaName := args[0]
+	pokemon, err := pokeapi.ListPokemonInArea(cache, areaName)
+	if err != nil {
+		return fmt.Errorf("failed to fetch Pokemon in area %s: %w", areaName, err)
+	}
+
+	fmt.Println("Found Pokemon:")
+	for _, p := range pokemon.Results {
+		fmt.Println("- " + p.Pokemon.Name)
 	}
 	return nil
 }

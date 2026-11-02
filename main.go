@@ -39,7 +39,7 @@ func main() {
 		for _, command := range cfg.commands {
 			if firstWord == command.name {
 				isCommandFound = true
-				err := command.callback(cfg)
+				err := command.callback(cfg, words[1:])
 				if err != nil {
 					fmt.Println("Error executing command:", err)
 				}
