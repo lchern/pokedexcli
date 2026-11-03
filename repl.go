@@ -7,9 +7,12 @@ import (
 	"pokedexcli/internal/pokeapi"
 	"pokedexcli/internal/pokecache"
 	"time"
+	"math/rand"
 )
 
 var cache = pokecache.NewCache(5 * time.Minute)
+
+var pokedex = map[string]pokeapi.Pokemon{}
 
 type cliCommand struct {
 	name        string
@@ -43,6 +46,11 @@ func getCommands() map[string]cliCommand {
 			name: 		 "explore",
 			description: "Displays the names of all Pokemon found in that area",
 			callback: 	 commandExplore,
+		},
+		"catch"	: {
+			name: 		 "catch",
+			description: "Catch a Pokemon in the current area",
+			callback: 	 commandCatch,
 		},
 	}
 }
@@ -127,6 +135,33 @@ func commandExplore(cfg *config, args []string) error {
 	fmt.Println("Found Pokemon:")
 	for _, p := range pokemon.Results {
 		fmt.Println("- " + p.Pokemon.Name)
+	}
+	return nil
+}
+
+func commandCatch(cfg *config, args []string) error {
+	isCaught := false
+	if len(args) == 0 {
+		return fmt.Errorf("please provide a Pokemon name to catch")
+	}
+
+	pokemonName := args[0]
+	// Simulate catching the Pokemon
+	pokemon, err := pokeapi.GetPokemonDetails(cache, pokemonName)
+	if err != nil {
+		return fmt.Errorf("failed to fetch Pokemon %s: %w", pokemonName, err)
+	}
+
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+	time.Sleep(1 * time.Second) // Simulate some delay
+	if rand.Intn(pokemon.BaseXP) < 30 { // Randomly determine if the Pokemon is caught based on its base experience
+		isCaught = true
+	}
+	if isCaught {
+		fmt.Printf("%s was caught!\n", pokemon.Name)
+		pokedex[pokemon.Name] = pokemon
+	} else {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
 	}
 	return nil
 }
