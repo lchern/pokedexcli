@@ -123,6 +123,7 @@ func commandExplore(cfg *config, args []string) error {
 		return fmt.Errorf("failed to fetch Pokemon in area %s: %w", areaName, err)
 	}
 
+	fmt.Printf("Exploring %s...\n", areaName)
 	fmt.Println("Found Pokemon:")
 	for _, p := range pokemon.Results {
 		fmt.Println("- " + p.Pokemon.Name)
